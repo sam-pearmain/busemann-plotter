@@ -9,6 +9,10 @@ pub fn bisection (
     let tolerance = tolerance.unwrap_or(1e-9);
     let max_iters = max_iters.unwrap_or(200);
 
+    if f(x1) * f(x2) > 0.0 {
+        panic!("root not within bounds");
+    }
+
     // initialise lower and upper bound according to given bounds
     let (mut lowerbound, mut upperbound) = if x1 < x2 { (x1, x2) } else { (x2, x1) };
 

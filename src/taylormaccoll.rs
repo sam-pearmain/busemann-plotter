@@ -4,8 +4,8 @@ use crate::utils::error::FlowError;
 
 #[derive(Debug, Clone)]
 pub struct VelocityVector {
-    radial_component: f64,      // u
-    tangential_component: f64,  // v
+    pub radial_component: f64,      // u
+    pub tangential_component: f64,  // v
 }
 
 impl VelocityVector {
@@ -26,9 +26,9 @@ pub struct VelocityVectorDerivative {
 
 pub struct TaylorMaccollResult {
     // a struct to organise the results from integrating taylor maccoll equations
-    velocity_vector: VelocityVector,
-    radial_distance: f64,
-    theta: f64,
+    pub velocity_vector: VelocityVector,
+    pub radial_distance: f64,
+    pub theta: f64,
 }
 
 pub fn streamline(

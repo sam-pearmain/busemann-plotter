@@ -18,7 +18,7 @@ pub fn calc_pressure_ratio(
     k_squared: f64,
     gamma: f64,
 ) -> f64 {
-    ((gamma + 2.0) * k_squared / (((gamma - 1.0) * k_squared) + 2.0)).powf(gamma / (gamma - 1.0)) *
+    ((gamma + 1.0) * k_squared / (((gamma - 1.0) * k_squared) + 2.0)).powf(gamma / (gamma - 1.0)) *
     ((gamma + 1.0) / ((2.0 * gamma * k_squared) - gamma + 1.0)).powf(1.0 / (gamma - 1.0))
 }
 
