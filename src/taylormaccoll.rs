@@ -1,8 +1,8 @@
 #[allow(dead_code)]
 
-use std::collections::HashMap;
 use crate::utils::error::FlowError;
 
+#[derive(Debug, Clone)]
 pub struct VelocityVector {
     radial_component: f64,      // u
     tangential_component: f64,  // v
@@ -18,9 +18,17 @@ impl VelocityVector {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct VelocityVectorDerivative {
     radial_derivative: f64,     // du / dθ
     tangential_derivative: f64, // dv / dθ
+}
+
+pub struct TaylorMaccollResult {
+    // a struct to organise the results from integrating taylor maccoll equations
+    velocity_vector: VelocityVector,
+    radial_distance: f64,
+    theta: f64,
 }
 
 pub fn streamline(
@@ -69,9 +77,10 @@ pub fn solve_taylor_maccoll(
     initial_velocity_vector: VelocityVector,
     initial_theta: f64,
     final_theta: f64,
+    initial_r: f64,
     gamma: f64,
     steps: u32,
-) -> Result<HashMap<f64, VelocityVector, f64>, FlowError> {
+) -> Result<Vec<TaylorMaccollResult>, FlowError> {
     // 4th order runge kutta integration of taylor maccoll equations
     if !initial_velocity_vector.valid_mach_number() {
         return Err(FlowError::InvalidMachNumber);
@@ -80,11 +89,47 @@ pub fn solve_taylor_maccoll(
     // set step size
     let h: f64 = (final_theta - initial_theta) / steps as f64;
     
-    // vectors to store results
-    let mut velocity_vectors: Vec<VelocityVector> = Vec::new();
-    let mut thetas: Vec<f64> = Vec::new();
-    let mut contour: Vec<f64> = Vec::new();
-    velocity_vectors.push(initial_velocity_vector);
-    thetas.push(initial_theta);
+    // vector to store results
+    let mut results: Vec<TaylorMaccollResult> = Vec::new();
 
+    // push initial values to results
+    results.push(TaylorMaccollResult{
+        velocity_vector: initial_velocity_vector.clone(),
+        radial_distance: initial_r,
+        theta: initial_theta,
+    });
+
+    // starting conditions for integration
+    let mut current_velocity_vector: VelocityVector = initial_velocity_vector.clone();
+    let mut current_radial_distance: f64 = initial_r;
+    let mut current_theta: f64 = initial_theta;
+
+    for _ in 0..steps {
+        // first runge-kutta constant
+        let k1_velocity_vector = current_velocity_vector;
+        let k1: VelocityVectorDerivative = 
+            taylor_maccoll(
+                k1_velocity_vector,
+                current_theta,
+                gamma,
+            )?;
+        let k1_radial: f64 = h * k1.radial_derivative;
+        let k1_tangential: f64 = h * k1.tangential_derivative;
+        let k1_contour: f64 = h * streamline(current_velocity_vector, current_radial_distance)?;
+
+        // second runge-kutta constant
+        let k2_velocity_vector: VelocityVector = 
+            VelocityVector {
+                radial_component: k1_velocity_vector.radial_component + (0.5 * k1_radial),
+                tangential_component: k1_velocity_vector.tangential_component + (0.5 * k1_radial),
+            };
+        let k2: VelocityVectorDerivative = 
+            taylor_maccoll(
+                k2_velocity_vector,
+                current_theta + (0.5 * h),
+                gamma,
+            )?;
+    }
+
+    Ok(results)
 }
