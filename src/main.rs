@@ -1,8 +1,7 @@
 #[allow(dead_code)]
 
 use std::f64::consts::PI;
-use std::fs::File;
-use std::io::{Write, BufWriter};
+use csv::Writer;
 
 mod utils;
 mod taylormaccoll;
@@ -52,23 +51,26 @@ fn main() {
         8000,
     ) {
         Ok(results) => {
-            let file = File::create("results.txt").expect("file creation failed");
-            let mut writer = BufWriter::new(file);
+            let mut wtr = Writer::from_path("results.csv")
+            .expect("failed to create csv");
 
             // header
-            writeln!(writer, "theta (rad)\tradial distance\tradial mach\ttangential mach")
-                .expect("failed to write header");
+            wtr.write_record(&["theta (rad)", "r (-)", "radial mach", "tangential mach"])
+                .expect("Failed to write header");
 
+            // write line to csv
             for result in results {
-                writeln!(
-                    writer,
-                    "{:.6}\t{:.6}\t{:.6}\t{:.6}",
-                    result.theta,
-                    result.radial_distance,
-                    result.velocity_vector.radial_component,
-                    result.velocity_vector.tangential_component,
-                ).expect("failed to write data");
+                wtr.write_record(&[
+                    format!("{:.6}", result.theta),
+                    format!("{:.6}", result.radial_distance),
+                    format!("{:.6}", result.velocity_vector.radial_component),
+                    format!("{:.6}", result.velocity_vector.tangential_component),
+                ])
+                .expect("failed to write line");
             }
+
+            // flush the csv writer
+            wtr.flush().expect("flush failed");
         },
         Err(e) => {
             panic!("there was an error: {:?}", e);
