@@ -1,10 +1,21 @@
 #[allow(dead_code)]
 
+use std::collections::HashMap;
 use crate::utils::error::FlowError;
 
 pub struct VelocityVector {
     radial_component: f64,      // u
     tangential_component: f64,  // v
+}
+
+impl VelocityVector {
+    pub fn valid_mach_number(&self) -> bool {
+        self.get_mach_number() >= 1.0
+    }
+
+    pub fn get_mach_number(&self) -> f64 {
+        (self.radial_component.powi(2) + self.tangential_component.powi(2)).sqrt()
+    }
 }
 
 pub struct VelocityVectorDerivative {
@@ -13,16 +24,15 @@ pub struct VelocityVectorDerivative {
 }
 
 pub fn taylor_maccoll(
-    mach_vector: VelocityVector,
+    velocity_vector: VelocityVector,
     theta: f64,
     gamma: f64,
 ) -> Result<VelocityVectorDerivative, FlowError>{
     // get radial and tangential velocity components
-    let u: f64 = mach_vector.radial_component;
-    let v: f64 = mach_vector.tangential_component;
+    let u: f64 = velocity_vector.radial_component;
+    let v: f64 = velocity_vector.tangential_component;
     
-    let mach: f64 = (u.powi(2) + v.powi(2)).sqrt();
-    if mach < 1.0 {
+    if !velocity_vector.valid_mach_number() {
         return Err(FlowError::InvalidMachNumber)
     }
 
@@ -39,4 +49,16 @@ pub fn taylor_maccoll(
         radial_derivative: u_derivative,
         tangential_derivative: v_derivative,
     })
+}
+
+pub fn solve_taylor_maccoll(
+    initial_velocity_vector: VelocityVector,
+    initial_theta: f64,
+    final_theta: f64,
+
+) -> Result<HashMap<f64, VelocityVector, f64>, FlowError> {
+    if !initial_velocity_vector.valid_mach_number() {
+        return Err(FlowError::InvalidMachNumber);
+    }
+    
 }
