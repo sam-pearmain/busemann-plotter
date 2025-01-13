@@ -113,11 +113,7 @@ pub fn solve_taylor_maccoll(
                 tangential_component: current_tangential_velocity,
             };
         let k1: VelocityVectorDerivative = 
-            taylor_maccoll(
-                &k1_velocity_vector,
-                current_theta,
-                gamma,
-            )?;
+            taylor_maccoll(&k1_velocity_vector, current_theta, gamma)?;
         let k1_radial: f64 = h * k1.radial_derivative;
         let k1_tangential: f64 = h * k1.tangential_derivative;
         let k1_contour: f64 = h * streamline(&k1_velocity_vector, current_radial_distance)?;
@@ -126,14 +122,67 @@ pub fn solve_taylor_maccoll(
         let k2_velocity_vector: VelocityVector = 
             VelocityVector {
                 radial_component: current_radial_velocity + (0.5 * k1_radial),
-                tangential_component: current_tangential_velocity + (0.5 * k1_radial),
+                tangential_component: current_tangential_velocity + (0.5 * k1_tangential),
             };
         let k2: VelocityVectorDerivative = 
-            taylor_maccoll(
-                &k2_velocity_vector,
-                current_theta + (0.5 * h),
-                gamma,
-            )?;
+            taylor_maccoll(&k2_velocity_vector, current_theta + (0.5 * h), gamma)?;
+        let k2_radial: f64 = h * k2.radial_derivative;
+        let k2_tangential: f64 = h * k2.tangential_derivative;
+        let k2_contour: f64 = h * streamline(&k2_velocity_vector, current_radial_distance + (0.5 * k1_contour))?;
+
+        // third runge-kutta constant
+        let k3_velocity_vector: VelocityVector = 
+            VelocityVector {
+                radial_component: current_radial_velocity + (0.5 * k2_radial),
+                tangential_component: current_tangential_velocity + (0.5 * k2_tangential),
+            };
+        let k3: VelocityVectorDerivative = 
+            taylor_maccoll(&k3_velocity_vector, current_theta + (0.5 * h), gamma)?;
+        let k3_radial: f64 = h * k3.radial_derivative;
+        let k3_tangential: f64 = h * k3.tangential_derivative;
+        let k3_conour: f64 = h * streamline(&k3_velocity_vector, current_radial_distance + (0.5 * k2_contour))?;
+
+        // fourth runge-kutta constant
+        let k4_velocity_vector: VelocityVector =
+            VelocityVector {
+                radial_component: current_radial_velocity + k3_radial,
+                tangential_component: current_tangential_velocity + k3_tangential,
+            };
+        let k4: VelocityVectorDerivative = 
+            taylor_maccoll(&k4_velocity_vector, current_theta + h, gamma)?;
+        let k4_radial: f64 = h * k4.radial_derivative;
+        let k4_tangential: f64 = h * k4.tangential_derivative;
+        let k4_contour: f64 = h * streamline(&k4_velocity_vector, current_radial_distance + k3_conour)?;
+
+        // calculate subsequent velocity components, radial distance and theta
+        let next_radial_velocity: f64 = 
+            current_radial_velocity + (1.0 / 6.0) *
+            (k1_radial + 2.0 * k2_radial + 2.0 * k3_radial + k4_radial);
+        let next_tangential_velocity: f64 = 
+            current_tangential_velocity + (1.0 / 6.0) *
+            (k1_tangential + 2.0 * k2_tangential + 2.0 * k3_tangential + k4_tangential);
+        let next_radial_distance: f64 = 
+            current_radial_distance + (1.0 / 6.0) *
+            (k1_contour + 2.0 * k2_contour + 2.0 * k3_conour + k4_contour);
+        let next_theta: f64 = current_theta + h;
+
+        // append results to results vec
+        results.push(
+            TaylorMaccollResult {
+                velocity_vector: VelocityVector {
+                    radial_component: next_radial_velocity,
+                    tangential_component: next_tangential_velocity,
+                },
+                radial_distance: next_radial_distance,
+                theta: next_theta,
+            }
+        );
+
+        // update current values with their subsequent value and loop
+        current_radial_velocity = next_radial_velocity;
+        current_tangential_velocity = next_tangential_velocity;
+        current_radial_distance = next_radial_distance;
+        current_theta = next_theta;
     }
 
     Ok(results)
