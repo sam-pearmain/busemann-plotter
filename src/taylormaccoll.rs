@@ -39,7 +39,7 @@ pub fn streamline(
         return Err(FlowError::InvalidMachNumber);
     }
 
-    let r_derivative = 
+    let r_derivative: f64 = 
         r * velocity_vector.radial_component / velocity_vector.tangential_component;
 
     Ok(r_derivative)
