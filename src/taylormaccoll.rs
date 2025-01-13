@@ -32,7 +32,7 @@ pub struct TaylorMaccollResult {
 }
 
 pub fn streamline(
-    velocity_vector: VelocityVector,
+    velocity_vector: &VelocityVector,
     r: f64 // the radial distance 
 ) -> Result<f64, FlowError> {
     if !velocity_vector.valid_mach_number() {
@@ -46,7 +46,7 @@ pub fn streamline(
 }
 
 pub fn taylor_maccoll(
-    velocity_vector: VelocityVector,
+    velocity_vector: &VelocityVector,
     theta: f64,
     gamma: f64,
 ) -> Result<VelocityVectorDerivative, FlowError>{
@@ -100,32 +100,37 @@ pub fn solve_taylor_maccoll(
     });
 
     // starting conditions for integration
-    let mut current_velocity_vector: VelocityVector = initial_velocity_vector.clone();
+    let mut current_radial_velocity: f64 = initial_velocity_vector.radial_component;
+    let mut current_tangential_velocity: f64 = initial_velocity_vector.tangential_component;
     let mut current_radial_distance: f64 = initial_r;
     let mut current_theta: f64 = initial_theta;
 
     for _ in 0..steps {
         // first runge-kutta constant
-        let k1_velocity_vector = current_velocity_vector;
+        let k1_velocity_vector: VelocityVector = 
+            VelocityVector {
+                radial_component: current_radial_velocity,
+                tangential_component: current_tangential_velocity,
+            };
         let k1: VelocityVectorDerivative = 
             taylor_maccoll(
-                k1_velocity_vector,
+                &k1_velocity_vector,
                 current_theta,
                 gamma,
             )?;
         let k1_radial: f64 = h * k1.radial_derivative;
         let k1_tangential: f64 = h * k1.tangential_derivative;
-        let k1_contour: f64 = h * streamline(current_velocity_vector, current_radial_distance)?;
+        let k1_contour: f64 = h * streamline(&k1_velocity_vector, current_radial_distance)?;
 
         // second runge-kutta constant
         let k2_velocity_vector: VelocityVector = 
             VelocityVector {
-                radial_component: k1_velocity_vector.radial_component + (0.5 * k1_radial),
-                tangential_component: k1_velocity_vector.tangential_component + (0.5 * k1_radial),
+                radial_component: current_radial_velocity + (0.5 * k1_radial),
+                tangential_component: current_tangential_velocity + (0.5 * k1_radial),
             };
         let k2: VelocityVectorDerivative = 
             taylor_maccoll(
-                k2_velocity_vector,
+                &k2_velocity_vector,
                 current_theta + (0.5 * h),
                 gamma,
             )?;
