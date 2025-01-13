@@ -5,17 +5,31 @@ mod taylormaccoll;
 
 fn main() {
     let gamma: f64 = 1.4;
-    let design_efficiency: f64 = 0.9;
+    let design_efficiency: f64 = 1.0;
+    let design_chamber_mach: f64 = 2.0;
 
-    // determine k^2 from design pressure efficiency
+    // determine k^2 and M2 from design pressure efficiency
     let k_squared = solve_for_k_squared(
         design_efficiency, 
         gamma, 
-        x1, // erm
-        x2, 
+        0.0, // erm
+        100.0, 
         None, 
         None,
     );
+    let upstream_mach = solve_for_upstream_mach(
+        design_chamber_mach, 
+        k_squared, 
+        gamma, 
+        0.0, 
+        5.0, 
+        None, 
+        None, 
+    );
+    
+    // get theta 23
+    let theta: f64 = (k_squared.sqrt() / upstream_mach).asin();
+    dbg!(theta, k_squared, upstream_mach);
 }
 
 fn solve_for_upstream_mach(
@@ -28,8 +42,10 @@ fn solve_for_upstream_mach(
     max_iters: Option<u16>,
 ) -> f64 {
     let func = |upstream_mach: f64| {
-        utils::equations::calc_downstream_mach(k_squared, upstream_mach, gamma)
+        utils::equations::calc_downstream_mach(k_squared, upstream_mach, gamma) - target_mach
     };
+
+    utils::numerics::bisection(&func, x1, x2, tolerance, max_iters)
 }
 
 fn solve_for_k_squared(
