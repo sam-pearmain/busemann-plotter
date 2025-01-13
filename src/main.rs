@@ -8,7 +8,7 @@ mod taylormaccoll;
 
 fn main() {
     let gamma: f64 = 1.4;
-    let design_efficiency: f64 = 0.9;
+    let design_efficiency: f64 = 0.95;
     let design_chamber_mach: f64 = 2.0;
 
     // determine k^2 and M2 from design pressure efficiency
@@ -55,16 +55,27 @@ fn main() {
             .expect("failed to create csv");
 
             // header
-            wtr.write_record(&["theta (rad)", "r (-)", "radial mach", "tangential mach"])
+            wtr.write_record(&["theta (rad)", "r (-)", "radial mach", "tangential mach", "mach number", "x", "y"])
                 .expect("Failed to write header");
 
             // write line to csv
             for result in results {
+                let mach_number = (
+                    result.velocity_vector.radial_component.powi(2) +
+                    result.velocity_vector.tangential_component.powi(2)
+                ).sqrt();
+
+                let x_coord = result.radial_distance * result.theta.cos();
+                let y_coord: f64 = result.radial_distance * result.theta.sin();
+                
                 wtr.write_record(&[
                     format!("{:.6}", result.theta),
                     format!("{:.6}", result.radial_distance),
                     format!("{:.6}", result.velocity_vector.radial_component),
                     format!("{:.6}", result.velocity_vector.tangential_component),
+                    format!("{:.6}", mach_number),
+                    format!("{:.6}", x_coord),
+                    format!("{:.6}", y_coord),
                 ])
                 .expect("failed to write line");
             }
