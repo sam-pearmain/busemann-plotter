@@ -166,6 +166,15 @@ pub fn solve_taylor_maccoll(
             (k1_contour + 2.0 * k2_contour + 2.0 * k3_conour + k4_contour);
         let next_theta: f64 = current_theta + h;
 
+        // break clause
+        let cross_stream_mach: f64 = 
+            next_radial_velocity * next_theta.sin() +
+            next_tangential_velocity * next_theta.cos();
+        if cross_stream_mach >= 0.0 {
+            // freestream condition reached
+            break;
+        }
+
         // append results to results vec
         results.push(
             TaylorMaccollResult {
