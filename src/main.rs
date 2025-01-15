@@ -7,28 +7,13 @@ mod utils;
 mod taylormaccoll;
 
 fn main() {
-    let gamma: f64 = 1.4;
-    let design_efficiency: f64 = 0.95;
+    let gamma: f64 = 1.0;
+    let design_efficiency: f64 = 0.99;
     let design_chamber_mach: f64 = 2.0;
 
     // determine k^2 and M2 from design pressure efficiency
-    let k_squared = solve_for_k_squared(
-        design_efficiency, 
-        gamma, 
-        1.0, // erm
-        5.0, 
-        None, 
-        None,
-    );
-    let upstream_mach = solve_for_upstream_mach(
-        design_chamber_mach, 
-        k_squared, 
-        gamma, 
-        0.0, 
-        5.0, 
-        None, 
-        None, 
-    );
+    let k_squared = solve_for_k_squared(design_efficiency, gamma, 1.0, 5.0, None, None);
+    let upstream_mach = solve_for_upstream_mach(design_chamber_mach, k_squared, gamma, 0.0, 5.0, None, None);
     
     // get the shock angle for the conical shock at the throat
     let shock_angle: f64 = (k_squared.sqrt() / upstream_mach).asin();
