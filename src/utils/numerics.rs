@@ -1,13 +1,13 @@
 pub fn bisection (
     f: &impl Fn(f64) -> f64,
-    x1: f64, // 1st solution bound
-    x2: f64, // 2nd solution bound
+    x1: f64, // 1st search bound
+    x2: f64, // 2nd search bound
     tolerance: Option<f64>,
     max_iters: Option<u16>,
 ) -> f64 {
     // default tolerance 1e-9 unless otherwise given
-    let tolerance = tolerance.unwrap_or(1e-9);
-    let max_iters = max_iters.unwrap_or(200);
+    let tolerance: f64 = tolerance.unwrap_or(1e-9);
+    let max_iters: u16 = max_iters.unwrap_or(200);
 
     if f(x1) * f(x2) > 0.0 {
         panic!("root not within bounds");
