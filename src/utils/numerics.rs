@@ -20,7 +20,7 @@ pub fn bisection (
     for _ in 0..max_iters {
         let midpoint = (upperbound + lowerbound) / 2.0;
         
-        // check convergence
+        // check convergence 
         if f(midpoint).abs() < tolerance || (upperbound - lowerbound) / 2.0 < tolerance {
             return midpoint;
         }
