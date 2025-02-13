@@ -166,9 +166,9 @@ pub fn solve_taylor_maccoll(
         let cross_stream_mach: f64 = 
             next_radial_velocity * next_theta.sin() +
             next_tangential_velocity * next_theta.cos();
+            
         if cross_stream_mach >= 0.0 {
-            // freestream condition reached
-            break;
+            break; // freestream condition reached
         }
 
         // append results to results vec
