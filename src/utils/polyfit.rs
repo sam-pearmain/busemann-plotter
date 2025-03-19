@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+#[derive(Debug)]
 pub struct Polynomial {
     order: usize,
     coeffs: Vec<f64>,
