@@ -52,7 +52,7 @@ fn main() {
                     result.velocity_vector.tangential_component.powi(2)
                 ).sqrt();
 
-                let x_coord: f64 = result.radial_distance * result.theta.cos();
+                let x_coord: f64 = -result.radial_distance * result.theta.cos();
                 let y_coord: f64 = result.radial_distance * result.theta.sin();
                 x_data.push(x_coord);
                 y_data.push(y_coord);
@@ -69,9 +69,10 @@ fn main() {
                 .expect("failed to write line");
             }
             // fit a polynomial
-            let poly = utils::polyfit::polyfit(&x_data, &y_data, 3);
+            let poly = utils::polyfit::polyfit(&x_data, &y_data, 20);
             println!("fitted polynomial: {}", poly);
-            poly.plot("inlet.png", (1.0, -1.0));
+            poly.plot("inlet.png", (x_data[0], *x_data.last().expect("erm")))
+                .expect("idk what happened");
 
             // flush the csv writer
             wtr.flush().expect("flush failed");

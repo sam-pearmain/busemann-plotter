@@ -20,7 +20,7 @@ impl Polynomial {
 
     pub fn plot(&self, filename: &str, x_range: (f64, f64)) -> Result<(), Box<dyn std::error::Error>> {
         use plotters::prelude::*;
-        let root = BitMapBackend::new(filename, (800, 600)).into_drawing_area();
+        let root = BitMapBackend::new(filename, (2560, 1440)).into_drawing_area();
         root.fill(&WHITE)?;
         let steps = 100;
         let mut y_min = f64::INFINITY;
@@ -31,6 +31,16 @@ impl Polynomial {
             y_min = y_min.min(y);
             y_max = y_max.max(y);
         }
+        y_min = y_min.min(0.0);
+        y_max = y_max.max(0.0);
+        let x_delta = x_range.1 - x_range.0;
+        let y_delta = y_max - y_min;
+        let (y_min, y_max) = if y_delta < x_delta {
+            let mid_y = (y_min + y_max) / 2.0;
+            (mid_y - x_delta / 2.0, mid_y + x_delta / 2.0)
+        } else {
+            (y_min, y_max)
+        };
         let mut chart = ChartBuilder::on(&root)
             .caption("Polynomial Plot", ("sans-serif", 20).into_font())
             .margin(30)
@@ -46,7 +56,13 @@ impl Polynomial {
             &RED,
         ))?
         .label("Polynomial")
-        .legend(|(x, y)| Path::new(vec![(x, y), (x + 20, y)], &RED));
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
+        chart.draw_series(LineSeries::new(
+            vec![(x_range.0, 0.0), (x_range.1, 0.0)],
+            &BLACK,
+        ))?
+        .label("y=0")
+        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLACK));
         chart.configure_series_labels()
             .background_style(&WHITE.mix(0.8))
             .border_style(&BLACK)
