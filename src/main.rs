@@ -68,6 +68,7 @@ fn main() {
                 ])
                 .expect("failed to write line");
             }
+            
             // fit a polynomial
             let poly = utils::polyfit::polyfit(&x_data, &y_data, 20);
             println!("fitted polynomial: {}", poly);
